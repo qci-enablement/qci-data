@@ -1,0 +1,11 @@
+# This file contains metadata about the `xml_build.zip`
+pages:
+  - file: index
+  - file: usage
+  - file: eqc_direct
+    title: EQC Direct
+  - file: dependencies
+  - file: resource
+  # Ignore the "module" file as it contains only the table of contents of "eqc_direct"
+  - file: modules
+    ignore: true
