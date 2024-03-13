@@ -1,0 +1,8 @@
+# This file contains metadata about the `xml_build.zip`
+# Order Matters!
+pages:
+  qci_client:
+  index:
+    ignore: true
+  modules:
+    ignore: true
