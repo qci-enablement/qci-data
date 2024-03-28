@@ -7,7 +7,7 @@ pages:
   usage:
     title: 'Basic Usage'
   eqc_direct:
-    title: EQC Direct
+    title: EQC Direct Package
   dependencies:
     title: Dependencies
   resource:
