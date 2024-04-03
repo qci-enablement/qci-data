@@ -1,11 +1,15 @@
 # This file contains metadata about the `xml_build.zip`
 # Order Matters!
+index: index
 pages:
   index:
+    title: Getting Started # Override title
   usage:
+    title: 'Basic Usage'
   eqc_direct:
-    title: EQC Direct # Override title
+    title: EQC Direct Package
   dependencies:
+    title: Dependencies
   resource:
   modules:
     ignore: true
