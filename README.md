@@ -9,18 +9,19 @@ Publish pages on the enablement website as ebooks
 Those files are converted to webpages
 
 - Jupyter Ebook
+- Sphinx Docs
 
 ## Routing
 
 `File Path` is used as `Page path`
 
-## Branches
+## Main Branches
 
-- `main` : published to main website
-- `staging`: published to preview website
+- `main` : published to staging at: https://qci-preview.netlify.app/
+- `prod`: published to prod at: https://quantumcomputinginc.com/
 
 ## How to Edit/Add files
 
-1. Create a sub-branch from `staging`
-2. Create a PR against `staging` and go through the approval process
-3. Once the preview approved, merge `staging` branch to the `main` branch.
+1. Create a sub-branch from `main`
+2. Create a PR against `main` and go through the approval process
+3. Once the preview approved, merge `main` branch (or your current branch) to the `prod` branch.
