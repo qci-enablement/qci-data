@@ -1,0 +1,75 @@
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  checkout_codebase:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout QCI learn
+        uses: actions/checkout@v4
+        with:
+          repository: qci-enablement/learn-qci
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/learn/.next/cache
+            bin
+          # Generate a new cache whenever packages or source files change.
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          # If source files changed but packages didn't, rebuild from a prior cache.
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile # optional, --immutable
+      - name: ESlint
+        run: yarn learn lint
+      - name: Cache Data
+        id: syncData
+        uses: actions/cache@v4
+        with:
+          path: apps/learn/build/data # Path to the binary file
+          key: ${{ runner.os }}-data-${{ hashFiles('**/contentful-data.json', '**/metadata.json') }}
+      - name: Sync data
+        run: yarn learn sync-data
+        env:
+          DEV_ENV: production
+          CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
+          CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
+          CONTENTFUL_PREVIEW: ${{ vars.CONTENTFUL_PREVIEW }} # TODO remove this
+      - name: Cache Pandoc Binay
+        id: binaycache
+        uses: actions/cache@v4
+        with:
+          path: bin # Path to the binary file
+          key: ${{ runner.os }}-binary-${{ hashFiles('bin/**/*') }}
+      - name: Install Pandoc
+        if: steps.binaycache.outputs.cache-hit != 'true'
+        run: bash ./scripts/install-pandoc.sh
+      - name: Build website
+        run: yarn learn next build
+      # Deploy PR Preview
+      - name: Deploy PR Preview to Netlify
+        id: netlify-pr-preview
+        uses: netlify/actions/cli@master
+        with:
+          args: deploy --dir=apps/learn/dist --filter=@quantumcomputinginc/learn --functions=netlify/functions --alias=deploy-preview-${{ github.event.number }} --message="PR Preview ${{ github.event.number }} By ${{ github.actor }}"
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PREVIEW_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      # End Output URL
+      - name: Add deploy preview URL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node ./.github/workflows/update-description.js
