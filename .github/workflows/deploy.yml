@@ -15,7 +15,7 @@ jobs:
         with:
           repository: qci-enablement/learn-qci
           ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.P_GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -71,5 +71,5 @@ jobs:
       # End Output URL
       - name: Add deploy preview URL
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.P_GITHUB_TOKEN }}
         run: node ./.github/workflows/update-description.js
