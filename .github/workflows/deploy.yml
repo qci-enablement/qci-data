@@ -1,5 +1,9 @@
 name: Deploy PR Preview
 
+run-name: Deploying preview for "${{ github.ref }}" by ${{ github.actor }} 🚀
+
+#! WARN: any edit to this file should be done too to: learn-qci/.github/workflows/deploy.yml
+
 on:
   pull_request:
     branches:
@@ -50,7 +54,8 @@ jobs:
       - name: Sync data
         run: yarn learn sync-data
         env:
-          DEV_ENV: production
+          DEV_ENV: pr
+          QCI_DATA_BRANCH_PR: ${{ env.branch }}
           CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
           CONTENTFUL_PREVIEW: ${{ vars.CONTENTFUL_PREVIEW }} # TODO remove this
@@ -74,6 +79,19 @@ jobs:
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PREVIEW_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      # Detect changed files
+      - name: List changes to generate URLs
+        id: list_changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number=${{ github.event.pull_request.number }}
+          owner=${{ github.repository_owner }}
+          repo=$(echo ${{ github.repository }} | cut -d'/' -f2)
+          files=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$owner/$repo/pulls/$pr_number/files" \
+            | jq -r '.[] | select(.status == "added" or .status == "modified") | .filename' | paste -sd ",")
+          echo "PREVIEW_URLS=$files" >> $GITHUB_ENV
       # End Output URL
       - name: Add deploy preview URL
         env:
