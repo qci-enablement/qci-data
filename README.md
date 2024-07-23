@@ -10,6 +10,7 @@ Those files are converted to webpages
 
 - Jupyter Ebook
 - Sphinx Docs
+- Overleaf
 
 ## Routing
 
@@ -17,11 +18,12 @@ Those files are converted to webpages
 
 ## Main Branches
 
-- `main` : published to staging at: https://qci-preview.netlify.app/
-- `prod`: published to prod at: https://quantumcomputinginc.com/
+- `main` : published to prod at: https://quantumcomputinginc.com/
 
 ## How to Edit/Add files
 
 1. Create a sub-branch from `main`
-2. Create a PR against `main` and go through the approval process
-3. Once the preview approved, merge `main` branch (or your current branch) to the `prod` branch.
+2. Create a PR against `main`
+3. Wait for the preview to be created
+4. Go through the approval process
+5. Once approved, merge your PR into `main`
