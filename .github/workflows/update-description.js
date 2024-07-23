@@ -22,7 +22,7 @@ try {
   const currentDescription = currentPR.body;
 	// Update Preview section
 	const c= currentDescription.indexOf(PREVIEW_HEADER);
-	const baseURL= `https://deploy-preview-${ pr_number }--qci-preview.netlify.app`;
+	const baseURL= `https://data-preview-${ pr_number }--qci-preview.netlify.app`;
 	if(c>-1){
 		const start= c + PREVIEW_HEADER.length
 		const end= currentDescription.indexOf('\n##', start);

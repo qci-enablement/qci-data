@@ -64,7 +64,7 @@ jobs:
         id: netlify-pr-preview
         uses: netlify/actions/cli@master
         with:
-          args: deploy --dir=apps/learn/dist --filter=@quantumcomputinginc/learn --functions=netlify/functions --alias=deploy-preview-${{ github.event.number }} --message="PR Preview ${{ github.event.number }} By ${{ github.actor }}"
+          args: deploy --dir=apps/learn/dist --filter=@quantumcomputinginc/learn --functions=netlify/functions --alias=data-preview-${{ github.event.number }} --message="PR Preview ${{ github.event.number }} By ${{ github.actor }}"
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PREVIEW_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
