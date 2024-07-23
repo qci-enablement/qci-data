@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # End Output URL
+      - name: Add Loading
+        env:
+          GITHUB_TOKEN: ${{ secrets.P_GITHUB_TOKEN }}
+          DESC_STATE: loading
+        run: node ./.github/workflows/update-description.js
       - name: Checkout QCI learn
         uses: actions/checkout@v4
         with:
