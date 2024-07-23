@@ -10,12 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # End Output URL
       - name: Checkout QCI learn
         uses: actions/checkout@v4
         with:
           repository: qci-enablement/learn-qci
           ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.P_GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -41,6 +42,11 @@ jobs:
         with:
           path: apps/learn/build/data # Path to the binary file
           key: ${{ runner.os }}-data-${{ hashFiles('**/contentful-data.json', '**/metadata.json') }}
+      - name: Add Loading
+        env:
+          GITHUB_TOKEN: ${{ secrets.P_GITHUB_TOKEN }}
+          DESC_STATE: loading
+        run: node ./.github/workflows/update-description.js
       - name: Sync data
         run: yarn learn sync-data
         env:
@@ -64,12 +70,12 @@ jobs:
         id: netlify-pr-preview
         uses: netlify/actions/cli@master
         with:
-          args: deploy --dir=apps/learn/dist --filter=@quantumcomputinginc/learn --functions=netlify/functions --alias=deploy-preview-${{ github.event.number }} --message="PR Preview ${{ github.event.number }} By ${{ github.actor }}"
+          args: deploy --dir=apps/learn/dist --filter=@quantumcomputinginc/learn --functions=netlify/functions --alias=data-preview-${{ github.event.number }} --message="PR Preview ${{ github.event.number }} By ${{ github.actor }}"
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PREVIEW_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       # End Output URL
       - name: Add deploy preview URL
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.P_GITHUB_TOKEN }}
         run: node ./.github/workflows/update-description.js
