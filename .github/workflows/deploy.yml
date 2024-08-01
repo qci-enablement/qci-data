@@ -51,11 +51,13 @@ jobs:
         with:
           path: apps/learn/build/data # Path to the binary file
           key: ${{ runner.os }}-data-${{ hashFiles('**/contentful-data.json', '**/metadata.json') }}
+      - name: Set branch name environment variable
+        id: get_branch
+        run: echo "QCI_DATA_BRANCH_PR=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
       - name: Sync data
         run: yarn learn sync-data
         env:
           DEV_ENV: pr
-          QCI_DATA_BRANCH_PR: ${{ github.ref_name }}
           CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
       - name: Cache Pandoc Binay
