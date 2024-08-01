@@ -55,7 +55,7 @@ jobs:
         run: yarn learn sync-data
         env:
           DEV_ENV: pr
-          QCI_DATA_BRANCH_PR: ${{ env.branch }}
+          QCI_DATA_BRANCH_PR: ${{ github.ref_name }}
           CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
           CONTENTFUL_PREVIEW: ${{ vars.CONTENTFUL_PREVIEW }} # TODO remove this
