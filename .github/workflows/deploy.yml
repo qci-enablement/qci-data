@@ -58,7 +58,6 @@ jobs:
           QCI_DATA_BRANCH_PR: ${{ github.ref_name }}
           CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
-          CONTENTFUL_PREVIEW: ${{ vars.CONTENTFUL_PREVIEW }} # TODO remove this
       - name: Cache Pandoc Binay
         id: binaycache
         uses: actions/cache@v4
