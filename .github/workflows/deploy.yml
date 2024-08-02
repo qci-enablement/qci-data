@@ -55,7 +55,7 @@ jobs:
         run: yarn learn sync-data
         env:
           DEV_ENV: pr
-          QCI_DATA_BRANCH_PR: ${{ github.ref_name }}
+          QCI_DATA_BRANCH_PR: ${{ github.head_ref }}
           CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
       - name: Cache Pandoc Binay
