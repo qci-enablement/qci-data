@@ -4,3 +4,4 @@
 
 # ignore the DS_Store files which macOS creates
 .DS_store
+.venv
