@@ -9,9 +9,19 @@ on:
     branches:
       - main
 
+# Two pushes to the same PR used to race each other onto the same Netlify alias, so whichever finished last silently won.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   checkout_codebase:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       # End Output URL
@@ -19,7 +29,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: qci-enablement/learn-qci
-          ref: main
+          #! TEMPORARY: points at the learn-qci fix branch so this PR can test it. Set back to `main` before merging.
+          ref: ConfigurationFix
           token: ${{ secrets.P_GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
@@ -30,9 +41,8 @@ jobs:
         with:
           path: |
             apps/learn/.next/cache
-            bin
           # Generate a new cache whenever packages or source files change.
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**/*.[jt]s', '**/*.[jt]sx') }}
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
@@ -45,20 +55,6 @@ jobs:
         run: node ./.github/workflows/update-description.js
       - name: ESlint
         run: yarn learn lint
-      - name: Cache Data
-        id: syncData
-        uses: actions/cache@v4
-        with:
-          path: apps/learn/build/data # Path to the binary file
-          key: ${{ runner.os }}-data-${{ hashFiles('**/contentful-data.json', '**/metadata.json') }}
-      - name: Sync data
-        run: yarn learn sync-data
-        env:
-          DEV_ENV: pr
-          QCI_DATA_BRANCH_PR: ${{ github.head_ref }}
-          CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
-          CONTENTFUL_TOKEN_DEV: ${{ secrets.CONTENTFUL_TOKEN_DEV }}
-          CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
       - name: Cache Pandoc Binay
         id: binaycache
         uses: actions/cache@v4
@@ -68,6 +64,20 @@ jobs:
       - name: Install Pandoc
         if: steps.binaycache.outputs.cache-hit != 'true'
         run: bash ./scripts/install-pandoc.sh
+      - name: Cache Data
+        id: syncData
+        uses: actions/cache@v4
+        with:
+          path: apps/learn/data
+          key: ${{ runner.os }}-data-${{ github.head_ref }}
+      - name: Sync data
+        run: yarn learn sync-data
+        env:
+          DEV_ENV: pr
+          QCI_DATA_BRANCH_PR: ${{ github.head_ref }}
+          CONTENTFUL_TOKEN: ${{ secrets.CONTENTFUL_TOKEN }}
+          CONTENTFUL_TOKEN_DEV: ${{ secrets.CONTENTFUL_TOKEN_DEV }}
+          CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
       - name: Build website
         run: yarn learn next build
       # Deploy PR Preview
