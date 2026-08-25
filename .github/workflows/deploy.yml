@@ -64,12 +64,16 @@ jobs:
       - name: Install Pandoc
         if: steps.binaycache.outputs.cache-hit != 'true'
         run: bash ./scripts/install-pandoc.sh
+      # Clone only. Generated pages/ stays uncached to avoid orphans.
       - name: Cache Data
         id: syncData
         uses: actions/cache@v4
         with:
-          path: apps/learn/data
-          key: ${{ runner.os }}-data-${{ github.head_ref }}
+          path: apps/learn/data/raw/qci-data
+          key: ${{ runner.os }}-qcidata-${{ github.head_ref }}
+          # New branches start from any existing clone; sync-data refetches.
+          restore-keys: |
+            ${{ runner.os }}-qcidata-
       - name: Sync data
         run: yarn learn sync-data
         env:
@@ -83,8 +87,15 @@ jobs:
       # TEMPORARY: diagnosing deploy file count
       - name: Inspect build output
         run: |
-          echo "--- apps/learn ---"
-          ls apps/learn
+          echo "--- apps/learn (incl. dotfiles) ---"
+          ls -a apps/learn
+          echo "--- .next ---"
+          find apps/learn/.next -maxdepth 2 -type d 2>/dev/null
+          echo ".next/cache files: $(find apps/learn/.next/cache -type f 2>/dev/null | wc -l)"
+          du -sh apps/learn/.next/cache 2>/dev/null
+          du -sh apps/learn/.next 2>/dev/null
+          echo "--- any cache dirs under apps/learn ---"
+          find apps/learn -type d -name cache -not -path "*/node_modules/*" 2>/dev/null
           echo "--- dist top-level dirs ---"
           find apps/learn/dist -maxdepth 1 -type d
           echo "--- file counts ---"
