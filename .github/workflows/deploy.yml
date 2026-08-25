@@ -21,7 +21,8 @@ permissions:
 jobs:
   checkout_codebase:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 60 while the determinism check runs a second build; drop back to 30 after
+    timeout-minutes: 60
 
     steps:
       # End Output URL
@@ -84,27 +85,52 @@ jobs:
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
       - name: Build website
         run: yarn learn next build
-      # TEMPORARY: diagnosing deploy file count
-      - name: Inspect build output
+      # TEMPORARY: is next build deterministic given identical input?
+      - name: Determinism check
         run: |
-          echo "--- apps/learn (incl. dotfiles) ---"
-          ls -a apps/learn
-          echo "--- .next ---"
-          find apps/learn/.next -maxdepth 2 -type d 2>/dev/null
-          echo ".next/cache files: $(find apps/learn/.next/cache -type f 2>/dev/null | wc -l)"
-          du -sh apps/learn/.next/cache 2>/dev/null
-          du -sh apps/learn/.next 2>/dev/null
-          echo "--- any cache dirs under apps/learn ---"
-          find apps/learn -type d -name cache -not -path "*/node_modules/*" 2>/dev/null
-          echo "--- dist top-level dirs ---"
-          find apps/learn/dist -maxdepth 1 -type d
-          echo "--- file counts ---"
-          echo "dist total:  $(find apps/learn/dist -type f | wc -l)"
-          echo "dist/cache:  $(find apps/learn/dist/cache -type f 2>/dev/null | wc -l)"
-          echo "out total:   $(find apps/learn/out -type f 2>/dev/null | wc -l)"
-          echo "html in dist: $(find apps/learn/dist -name '*.html' | wc -l)"
-          echo "--- dist subdir counts ---"
-          find apps/learn/dist -mindepth 1 -maxdepth 1 -type d -exec sh -c 'echo "$(find "$1" -type f | wc -l)  $1"' _ {} \;
+          set +e
+          cd apps/learn
+          find dist -type f -exec sha256sum {} + | sort -k2 > /tmp/a.txt
+          mv dist dist_a
+          cd "$GITHUB_WORKSPACE"
+          yarn learn next build
+          cd apps/learn
+          if [ ! -d dist ]; then
+            echo "Second build produced no dist; restoring build A so the deploy still works."
+            mv dist_a dist
+            exit 0
+          fi
+          find dist -type f -exec sha256sum {} + | sort -k2 > /tmp/b.txt
+
+          echo "=== COUNTS ==="
+          echo "build A files: $(wc -l < /tmp/a.txt)"
+          echo "build B files: $(wc -l < /tmp/b.txt)"
+
+          comm -13 /tmp/a.txt /tmp/b.txt > /tmp/changed.txt
+          echo "changed or new in B: $(wc -l < /tmp/changed.txt)"
+
+          echo "=== CHANGED BY TOP-LEVEL DIR ==="
+          awk '{print $2}' /tmp/changed.txt | sed 's|^dist/||' | cut -d/ -f1 | sort | uniq -c | sort -rn | head -25
+
+          echo "=== CHANGED BY EXTENSION ==="
+          awk '{print $2}' /tmp/changed.txt | sed 's|.*\.||' | sort | uniq -c | sort -rn | head -15
+
+          echo "=== SAMPLE CHANGED FILES ==="
+          awk '{print $2}' /tmp/changed.txt | head -8
+
+          echo "=== WHY THEY DIFFER (first 3) ==="
+          for f in $(awk '{print $2}' /tmp/changed.txt | head -3); do
+            echo "--- $f ---"
+            a="dist_a/${f#dist/}"
+            if [ -f "$a" ]; then
+              diff <(fold -w120 "$a") <(fold -w120 "$f") | head -12
+            else
+              echo "(new file, no counterpart in build A)"
+            fi
+          done
+
+          rm -rf dist_a
+          exit 0
       # Deploy PR Preview
       # Direct CLI: the docker action swallowed deploy failures
       - name: Deploy PR Preview to Netlify
