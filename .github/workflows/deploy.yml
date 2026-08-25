@@ -80,6 +80,20 @@ jobs:
           CONTENTFUL_TOKEN_PROD: ${{ secrets.CONTENTFUL_TOKEN_PROD }}
       - name: Build website
         run: yarn learn next build
+      # TEMPORARY: diagnosing deploy file count
+      - name: Inspect build output
+        run: |
+          echo "--- apps/learn ---"
+          ls apps/learn
+          echo "--- dist top-level dirs ---"
+          find apps/learn/dist -maxdepth 1 -type d
+          echo "--- file counts ---"
+          echo "dist total:  $(find apps/learn/dist -type f | wc -l)"
+          echo "dist/cache:  $(find apps/learn/dist/cache -type f 2>/dev/null | wc -l)"
+          echo "out total:   $(find apps/learn/out -type f 2>/dev/null | wc -l)"
+          echo "html in dist: $(find apps/learn/dist -name '*.html' | wc -l)"
+          echo "--- dist subdir counts ---"
+          find apps/learn/dist -mindepth 1 -maxdepth 1 -type d -exec sh -c 'echo "$(find "$1" -type f | wc -l)  $1"' _ {} \;
       # Deploy PR Preview
       # Direct CLI: the docker action swallowed deploy failures
       - name: Deploy PR Preview to Netlify
