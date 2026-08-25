@@ -48,7 +48,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
         run: yarn install --frozen-lockfile # optional, --immutable
-      - name: Add Loading
+      - name: Add Loading 
         env:
           GITHUB_TOKEN: ${{ secrets.P_GITHUB_TOKEN }}
           DESC_STATE: loading
